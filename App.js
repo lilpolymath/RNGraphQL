@@ -1,40 +1,88 @@
-import React, { Component } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import React, { Component } from "react";
+import { ActivityIndicator, StyleSheet } from "react-native";
 
-const instructions = Platform.select({
-  ios: 'Press Cmd+R to reload,\n' + 'Cmd+D or shake for dev menu',
-  android:
-    'Double tap R on your keyboard to reload,\n' +
-    'Shake or press menu button for dev menu',
+import { ApolloProvider, Query } from "react-apollo";
+import ApolloClient from "apollo-boost";
+import gql from "graphql-tag";
+
+const client = new ApolloClient({
+  uri: "http://192.168.43.95:4000/graphql",
 });
 
+import Pokemon from "./components/Pokemon";
+import getRandomInt from "./helpers/getRandomInt";
+
 export default class App extends Component {
+  state = {
+    query: null,
+  };
+
+  componentDidMount() {
+    const query = this.getQuery();
+    this.setState({
+      query,
+    });
+  }
+
+  getQuery = () => {
+    let randomID = getRandomInt(1, 807);
+    return `
+      query GetPokemonById {
+        pokemon(id: ${randomID}) {
+          id,
+          name,
+          desc,
+          pic,
+          types {
+            id,
+            name
+          }
+        }
+      }
+    `;
+  };
+
+  pokemon(id: ${randomID}) {
+    onGetNewPokemon = () => {
+    const query = this.getQuery();
+    this.setState({
+      query,
+    });
+  };
+
   render() {
+    const { query } = this.state;
+    if (!query) return null;
+
     return (
-      <View style={styles.container}>
-        <Text style={styles.welcome}>Welcome to React Native!</Text>
-        <Text style={styles.instructions}>To get started, edit App.js</Text>
-        <Text style={styles.instructions}>{instructions}</Text>
-      </View>
+      <ApolloProvider client={client}>
+        <Query
+          query={gql`
+            ${query}
+          `}
+        >
+          {({ loading, error, data }) => {
+            if (loading || error)
+              return <ActivityIndicator size="large" color="#0000ff" />;
+            return (
+              <AppContext.Provider
+                value={{ ...data.pokemon, onPress: this.onGetNewPokemon }}
+                style={styles.container}
+              >
+                <Pokemon />
+              </AppContext.Provider>
+            );
+          }}
+        </Query>
+      </ApolloProvider>
     );
   }
 }
 
+export const AppContext = React.createContext({ data: { pokemon: null } });
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
   },
 });
