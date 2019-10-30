@@ -17,15 +17,8 @@ export default class App extends Component {
     query: null,
   };
 
-  componentDidMount() {
-    const query = this.getQuery();
-    this.setState({
-      query,
-    });
-  }
-
   getQuery = () => {
-    let randomID = getRandomInt(1, 807);
+    const randomID = getRandomInt(1, 807);
     return `
       query GetPokemonById {
         pokemon(id: ${randomID}) {
@@ -42,13 +35,16 @@ export default class App extends Component {
     `;
   };
 
-  pokemon(id: ${randomID}) {
-    onGetNewPokemon = () => {
-    const query = this.getQuery();
+  onGetNewPokemon = () => {
+    const result = this.getQuery();
     this.setState({
-      query,
+      query: result,
     });
   };
+
+  componentDidMount() {
+    this.onGetNewPokemon();
+  }
 
   render() {
     const { query } = this.state;
